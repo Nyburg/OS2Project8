@@ -84,14 +84,33 @@ static int test_find_free(void)
 static int test_ialloc(void)
 {
     unsigned char block[BLOCK_SIZE];
+    struct inode *in1;
+    struct inode *in2;
 
     CTEST_ASSERT(image_open(TEST_IMAGE, 1) >= 0);
 
+    incore_free_all();
+
     memset(block, 0, BLOCK_SIZE);
     bwrite(1, block);
+    bwrite(3, block);
+    bwrite(4, block);
+    bwrite(5, block);
+    bwrite(6, block);
 
-    CTEST_ASSERT(ialloc() == 0);
-    CTEST_ASSERT(ialloc() == 1);
+    in1 = ialloc();
+    CTEST_ASSERT(in1 != NULL);
+    CTEST_ASSERT(in1->inode_num == 0);
+    CTEST_ASSERT(in1->ref_count == 1);
+    CTEST_ASSERT(in1->size == 0);
+    CTEST_ASSERT(in1->owner_id == 0);
+    CTEST_ASSERT(in1->permissions == 0);
+    CTEST_ASSERT(in1->flags == 0);
+
+    in2 = ialloc();
+    CTEST_ASSERT(in2 != NULL);
+    CTEST_ASSERT(in2->inode_num == 1);
+    CTEST_ASSERT(in2->ref_count == 1);
 
     bread(1, block);
     CTEST_ASSERT(block[0] == 3);
